@@ -1,0 +1,96 @@
+# Core Framework
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+
+# Computer Vision
+opencv-python
+opencv-contrib-python
+ultralytics  # YOLOv8
+easyocr
+pytesseract
+pillow
+
+# Machine Learning
+scikit-learn
+xgboost
+numpy
+pandas
+scipy
+
+# Deep Learning
+torch
+torchvision
+transformers
+
+# LLM & NLP
+openai
+anthropic
+langchain
+langchain-community
+langchain-openai
+faiss-cpu  # Use faiss-gpu if CUDA available
+sentence-transformers
+tiktoken
+
+# Data Processing
+apache-airflow
+pyspark
+sqlalchemy
+alembic
+psycopg2-binary
+
+# Database
+redis
+pymongo
+
+# API & Networking
+httpx
+requests
+websockets
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
+
+# MLOps
+mlflow
+evidently
+prometheus-client
+wandb
+
+# Data Validation
+great-expectations
+
+# Testing
+pytest
+pytest-asyncio
+pytest-cov
+pytest-mock
+httpx  # For testing FastAPI
+
+# Code Quality
+black
+ruff
+mypy
+pylint
+
+# Utilities
+python-dotenv
+pyyaml
+click
+tqdm
+colorlog
+rich
+
+# Video Processing
+moviepy
+imageio
+imageio-ffmpeg
+
+# Monitoring
+sentry-sdk
+
+# Documentation
+mkdocs
+mkdocs-material
