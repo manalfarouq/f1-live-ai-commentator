@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from ..schemas.prediction_schema import PredictRequest, PredictResponse
 from ..services.ml_service import ml_service
 
-router = APIRouter(prefix="/api/v1", tags=["Predictions"])
+router = APIRouter(tags=["Predictions"])
 
 @router.post("/predict", response_model=PredictResponse)
 def predict_winner(request: PredictRequest):

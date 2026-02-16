@@ -1,0 +1,22 @@
+# ============================================
+# REQUIREMENTS  - API BACKEND ONLY
+# ============================================
+
+
+# API Framework
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+
+# Machine Learning (pour prédictions)
+scikit-learn
+xgboost
+pandas
+numpy
+joblib
+
+# Utils
+python-multipart
+python-jose[cryptography]
+python-dotenv

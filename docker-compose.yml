@@ -1,15 +1,14 @@
-version: '3.8'
-
 services:
   api:
-    build: .
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: f1-api
     ports:
       - "8000:8000"
     volumes:
-      - ./app:/app/app
+      - ./backend/app:/app/app
     environment:
       - DEBUG=True
       - APP_NAME=F1 Live AI Commentator
     restart: unless-stopped
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
