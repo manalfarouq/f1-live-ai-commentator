@@ -5,14 +5,17 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Copier les requirements
-COPY requirements.txt .
+COPY ./backend/requirements.txt .
 
 # Installer les dépendances
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copier le code de l'application
-COPY ./app ./app
+COPY ./backend/app ./app
+
+# Copier le dossier models 
+COPY ./models ./models
 
 # Exposer le port
 EXPOSE 8000

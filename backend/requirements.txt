@@ -1,7 +1,6 @@
 # ============================================
-# REQUIREMENTS  - API BACKEND ONLY
+# REQUIREMENTS - API BACKEND ONLY
 # ============================================
-
 
 # API Framework
 fastapi
@@ -20,3 +19,6 @@ joblib
 python-multipart
 python-jose[cryptography]
 python-dotenv
+psycopg2-binary
+sqlalchemy
+google-generativeai
