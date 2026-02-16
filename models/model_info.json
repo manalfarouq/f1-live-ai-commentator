@@ -1,0 +1,15 @@
+{
+  "model_name": "Random Forest",
+  "accuracy": 0.9572115384615385,
+  "features": [
+    "Grid",
+    "Rain",
+    "Round",
+    "Season",
+    "DriverID_code",
+    "ConstructorName_code",
+    "CircuitID_code"
+  ],
+  "n_train": 8318,
+  "n_test": 2080
+}
