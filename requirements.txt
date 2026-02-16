@@ -7,7 +7,7 @@ pydantic-settings
 # Computer Vision
 opencv-python
 opencv-contrib-python
-ultralytics  # YOLOv8
+ultralytics
 easyocr
 pytesseract
 pillow
@@ -15,14 +15,18 @@ pillow
 # Machine Learning
 scikit-learn
 xgboost
+lightgbm
+imbalanced-learn
 numpy
 pandas
 scipy
+category-encoders
 
 # Deep Learning
 torch
 torchvision
 transformers
+tensorflow
 
 # LLM & NLP
 openai
@@ -30,16 +34,17 @@ anthropic
 langchain
 langchain-community
 langchain-openai
-faiss-cpu  # Use faiss-gpu if CUDA available
+faiss-cpu
 sentence-transformers
 tiktoken
 
-# Data Processing
+# Data Processing & Engineering
 apache-airflow
 pyspark
 sqlalchemy
 alembic
 psycopg2-binary
+openpyxl
 
 # Database
 redis
@@ -53,21 +58,25 @@ python-multipart
 python-jose[cryptography]
 passlib[bcrypt]
 
-# MLOps
+# MLOps & Monitoring
 mlflow
 evidently
 prometheus-client
 wandb
-
-# Data Validation
 great-expectations
+sentry-sdk
+
+# Visualization
+matplotlib
+seaborn
+plotly
+scikit-plot
 
 # Testing
 pytest
 pytest-asyncio
 pytest-cov
 pytest-mock
-httpx  # For testing FastAPI
 
 # Code Quality
 black
@@ -82,14 +91,12 @@ click
 tqdm
 colorlog
 rich
+joblib
 
 # Video Processing
 moviepy
 imageio
 imageio-ffmpeg
-
-# Monitoring
-sentry-sdk
 
 # Documentation
 mkdocs
