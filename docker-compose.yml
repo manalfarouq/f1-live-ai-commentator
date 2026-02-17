@@ -9,6 +9,8 @@ services:
     volumes:
       - ./backend/app:/app/app
       - ./models:/app/models
+      - ./notebooks:/app/notebooks  
+      - ./data:/app/data            
     env_file:
       - .env
     depends_on:

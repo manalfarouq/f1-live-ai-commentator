@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from .routes import prediction_router
+
+from .routes import prediction_router, f1_data_router
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(title="F1 Live AI Commentator API")
@@ -15,3 +16,4 @@ app.add_middleware(
 
 # Inclure les routes
 app.include_router(prediction_router.router)
+app.include_router(f1_data_router.router)

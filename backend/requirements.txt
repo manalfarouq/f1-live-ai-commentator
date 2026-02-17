@@ -22,3 +22,9 @@ python-dotenv
 psycopg2-binary
 sqlalchemy
 google-generativeai
+
+# Pour la reconnaissance d'objets F1
+opencv-python-headless 
+easyocr 
+torch 
+torchvision
