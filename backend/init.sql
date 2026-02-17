@@ -1,5 +1,11 @@
+-- backend/init.sql
+
 -- La base de données f1_predictions est déjà créée par POSTGRES_DB
 -- Pas besoin de CREATE DATABASE
+
+-- ==========================================
+-- TABLES POUR LES PRÉDICTIONS (existantes)
+-- ==========================================
 
 -- Créer la table pour les mappings d'encodage
 CREATE TABLE IF NOT EXISTS encoding_mappings (
@@ -34,8 +40,42 @@ CREATE INDEX IF NOT EXISTS idx_driver ON predictions_history(driver_id);
 CREATE INDEX IF NOT EXISTS idx_circuit ON predictions_history(circuit_id);
 CREATE INDEX IF NOT EXISTS idx_season ON predictions_history(season);
 
--- Insérer des données d'exemple pour les encodages
--- IMPORTANT: Ces données sont des exemples, vous devrez les remplacer par vos vraies données
+-- ==========================================
+-- NOUVELLES TABLES POUR LES DONNÉES F1 EN TEMPS RÉEL
+-- ==========================================
+
+-- Table des courses F1
+CREATE TABLE IF NOT EXISTS races (
+    id SERIAL PRIMARY KEY,
+    race_name VARCHAR(255),
+    circuit VARCHAR(255),
+    current_lap INTEGER NOT NULL,
+    total_laps INTEGER NOT NULL,
+    progress_percentage FLOAT NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table des positions des pilotes
+CREATE TABLE IF NOT EXISTS race_positions (
+    id SERIAL PRIMARY KEY,
+    race_id INTEGER NOT NULL REFERENCES races(id) ON DELETE CASCADE,
+    position INTEGER NOT NULL,
+    driver VARCHAR(3) NOT NULL,
+    team VARCHAR(255) NOT NULL,
+    interval VARCHAR(50),
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Index pour améliorer les performances
+CREATE INDEX IF NOT EXISTS idx_race_positions_race_id ON race_positions(race_id);
+CREATE INDEX IF NOT EXISTS idx_race_positions_driver ON race_positions(driver);
+CREATE INDEX IF NOT EXISTS idx_race_positions_position ON race_positions(position);
+CREATE INDEX IF NOT EXISTS idx_races_timestamp ON races(timestamp);
+CREATE INDEX IF NOT EXISTS idx_races_race_name ON races(race_name);
+
+-- ==========================================
+-- DONNÉES D'EXEMPLE POUR LES ENCODAGES
+-- ==========================================
 
 -- Exemple de pilotes
 INSERT INTO encoding_mappings (category, name, code) VALUES 
