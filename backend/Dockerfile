@@ -1,24 +1,20 @@
-# Utiliser Python 3.11 slim
 FROM python:3.11-slim
 
-# Définir le répertoire de travail
+# Installer uv ET libgomp (nécessaire pour LightGBM)
+RUN apt-get update && apt-get install -y libgomp1 && rm -rf /var/lib/apt/lists/*
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
 WORKDIR /app
 
-# Copier les requirements
-COPY ./backend/requirements.txt .
+COPY pyproject.toml .
+COPY uv.lock .
 
-# Installer les dépendances
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+RUN uv sync --frozen --no-dev
 
-# Copier le code de l'application
 COPY ./backend/app ./app
-
-# Copier le dossier models 
 COPY ./models ./models
 
-# Exposer le port
 EXPOSE 8000
 
-# Commande pour lancer l'application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
