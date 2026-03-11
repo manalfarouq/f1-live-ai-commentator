@@ -23,6 +23,7 @@ dependencies = [
     "imageio-ffmpeg>=0.6.0",
     "imbalanced-learn>=0.14.1",
     "joblib>=1.5.3",
+    "labelimg>=1.8.6",
     "langchain>=1.2.10",
     "langchain-community>=0.4.1",
     "langchain-openai>=1.1.10",
