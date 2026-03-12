@@ -5,6 +5,22 @@ from lap_parser import extract_lap_info
 from driver_parser import parse_driver_data
 from indicator_detector import detect_row_indicators
 from typing import Dict
+import cv2
+
+def crop_leaderboard(image_path: str) -> str:
+    """
+    Recadre la zone leaderboard (haut gauche)
+    pour éviter le bruit du broadcast complet
+    """
+    image  = cv2.imread(image_path)
+    height = image.shape[0]
+
+    # Le leaderboard occupe toujours ~250px à gauche
+    cropped = image[:height, :250]
+
+    crop_path = image_path.replace(".png", "_crop.png")
+    cv2.imwrite(crop_path, cropped)
+    return crop_path
 
 
 def get_f1_data(image_path: str) -> Dict:

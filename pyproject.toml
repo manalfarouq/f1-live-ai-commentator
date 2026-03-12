@@ -83,4 +83,5 @@ dependencies = [
     "wandb>=0.25.0",
     "websockets>=16.0",
     "xgboost>=3.2.0",
+    "yolo>=0.3.1",
 ]
