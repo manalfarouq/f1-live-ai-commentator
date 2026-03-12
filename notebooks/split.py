@@ -1,16 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[20]:
-
-
 import os
 import shutil
 import glob
 import random
 
 
-# In[21]:
+# Paramètres
 
 images_raw  = "data/yolo/images/raw"
 labels_raw  = "data/yolo/labels/raw"   
@@ -23,17 +20,11 @@ val_labels   = "data/yolo/labels/val"
 ratio_train = 0.8
 
 
-# In[22]:
-
-
-# Création des dossiers
+# Nettoyage des dossiers existants
 
 for dossier in [train_images, val_images, train_labels, val_labels]:
-    os.makedirs(dossier, exist_ok=True)
-
-
-
-# In[23]:
+    shutil.rmtree(dossier, ignore_errors=True)
+    os.makedirs(dossier)
 
 
 # Chargement des images
@@ -41,20 +32,30 @@ for dossier in [train_images, val_images, train_labels, val_labels]:
 images = glob.glob(os.path.join(images_raw, "*.png")) \
        + glob.glob(os.path.join(images_raw, "*.jpg"))
 
-"""
-On mélange aléatoirement les images avant de les séparer.
-Comme ça, train et val ont une distribution équilibrée des classes.
-"""
-random.shuffle(images)
 
+# Séparer annotées et backgrounds
 
+def est_annotee(img):
+    chemin = os.path.join(labels_raw, os.path.splitext(os.path.basename(img))[0] + ".txt")
+    return os.path.exists(chemin) and os.path.getsize(chemin) > 0
 
-# Split train / val
+annotees    = [img for img in images if est_annotee(img)]
+backgrounds = [img for img in images if not est_annotee(img)]
 
-split      = int(len(images) * ratio_train)
-train_set  = images[:split]
-val_set    = images[split:]
+# Shuffle séparé
+random.shuffle(annotees)
+random.shuffle(backgrounds)
 
+# Split 80/20 sur chaque groupe séparément
+def split_liste(lst):
+    s = int(len(lst) * ratio_train)
+    return lst[:s], lst[s:]
+
+train_ann, val_ann = split_liste(annotees)
+train_bg,  val_bg  = split_liste(backgrounds)
+
+train_set = train_ann + train_bg
+val_set   = val_ann   + val_bg
 
 
 # Copie des fichiers
@@ -74,9 +75,7 @@ copier(train_set, train_images, train_labels)
 copier(val_set,   val_images,   val_labels)
 
 
-
 # Résultat
 
-print(f"✅ Train : {len(train_set)} images")
-print(f"✅ Val   : {len(val_set)} images")
-
+print(f"✅ Train : {len(train_set)} images ({len(train_ann)} annotées)")
+print(f"✅ Val   : {len(val_set)} images ({len(val_ann)} annotées)")
