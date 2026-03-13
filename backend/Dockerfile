@@ -1,7 +1,13 @@
 FROM python:3.11-slim
 
-# Installer uv ET libgomp (nécessaire pour LightGBM)
-RUN apt-get update && apt-get install -y libgomp1 && rm -rf /var/lib/apt/lists/*
+# Installer les dépendances système
+RUN apt-get update && apt-get install -y \
+    libgomp1 \
+    libxcb1 \
+    libx11-6 \
+    libgl1 \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
