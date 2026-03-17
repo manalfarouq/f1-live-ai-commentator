@@ -1,11 +1,10 @@
 # backend/app/services/llm_service.py
 
-import google.generativeai as genai
+from google import genai
 import os
 
-# Configurer Gemini
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel('gemini-2.5-flash')  
+# nouvelle syntaxe : Client au lieu de configure()
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 
 def generate_commentary(predictions_list):
@@ -20,7 +19,10 @@ Voici les prédictions du Top 3 pour cette course :
 Génère un commentaire court (2-3 phrases) et enthousiaste sur ce podium prédit."""
 
     try:
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt,
+        )
         return response.text
     except Exception as e:
         return f"Erreur lors de la génération du commentaire : {str(e)}"
