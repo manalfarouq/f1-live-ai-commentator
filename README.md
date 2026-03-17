@@ -34,6 +34,34 @@
   - [Documentation](#documentation)
   - [Testing](#testing)
     - [Roadmap](#roadmap)
+- [🏎️ F1 Live AI Commentator - Backend API](#️-f1-live-ai-commentator---backend-api)
+  - [📋 Fonctionnalités](#-fonctionnalités)
+  - [🚀 Démarrage Rapide](#-démarrage-rapide)
+    - [Option 1 : Avec Docker (Recommandé)](#option-1--avec-docker-recommandé)
+    - [Option 2 : Sans Docker](#option-2--sans-docker)
+  - [📖 Documentation API](#-documentation-api)
+  - [🔧 Endpoints](#-endpoints)
+    - [`GET /`](#get-)
+    - [`GET /health`](#get-health)
+    - [`POST /api/v1/predict`](#post-apiv1predict)
+    - [`GET /api/v1/model-info`](#get-apiv1model-info)
+  - [📁 Structure du Projet](#-structure-du-projet)
+  - [🧪 Tester l'API](#-tester-lapi)
+    - [Avec curl](#avec-curl)
+    - [Avec Python](#avec-python)
+  - [🔐 Variables d'Environnement](#-variables-denvironnement)
+  - [🐳 Commandes Docker](#-commandes-docker)
+  - [📊 Modèle ML](#-modèle-ml)
+  - [🛠️ Développement](#️-développement)
+    - [Ajouter une route](#ajouter-une-route)
+    - [Modifier le modèle](#modifier-le-modèle)
+  - [❓ Troubleshooting](#-troubleshooting)
+    - [Erreur "Model not found"](#erreur-model-not-found)
+    - [Port 8000 déjà utilisé](#port-8000-déjà-utilisé)
+    - [Rebuild complet](#rebuild-complet)
+  - [📝 TODO](#-todo)
+  - [🤝 Contribution](#-contribution)
+  - [📄 Licence](#-licence)
 
 ---
 
@@ -538,3 +566,260 @@ f1-live-ai-commentator/
 ├── LICENSE                          # Licence projet
 └── CHANGELOG.md                     # Historique versions
 ```
+
+
+# 🏎️ F1 Live AI Commentator - Backend API
+
+API FastAPI pour prédire le gagnant des courses de Formule 1 en temps réel.
+
+## 📋 Fonctionnalités
+
+- ✅ Prédiction du gagnant d'une course F1
+- ✅ Calcul de probabilité de victoire
+- ✅ API REST avec documentation Swagger
+- ✅ Dockerisé et prêt pour le déploiement
+- ✅ CORS configuré pour le frontend
+
+## 🚀 Démarrage Rapide
+
+### Option 1 : Avec Docker (Recommandé)
+
+```bash
+# 1. Copier le fichier .env
+cp .env.example .env
+
+# 2. Copier votre modèle entraîné
+cp ../models/f1_winner_model.joblib app/models/
+
+# 3. Lancer avec Docker Compose
+docker-compose up --build
+```
+
+L'API sera disponible sur : **http://localhost:8000**
+
+### Option 2 : Sans Docker
+
+```bash
+# 1. Installer les dépendances
+pip install -r requirements.txt
+
+# 2. Copier le modèle
+cp ../models/f1_winner_model.joblib app/models/
+
+# 3. Lancer l'API
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+## 📖 Documentation API
+
+Une fois lancé, accédez à :
+- **Swagger UI** : http://localhost:8000/docs
+- **ReDoc** : http://localhost:8000/redoc
+
+## 🔧 Endpoints
+
+### `GET /`
+Racine de l'API - Informations de base
+
+### `GET /health`
+Vérifier la santé de l'API
+
+### `POST /api/v1/predict`
+Prédire le gagnant d'une course
+
+**Requête :**
+```json
+{
+  "Grid": 1,
+  "Rain": 0,
+  "Round": 5,
+  "Season": 2026,
+  "DriverID": "max",
+  "ConstructorName": "Red Bull",
+  "CircuitID": "monaco"
+}
+```
+
+**Réponse :**
+```json
+{
+  "winner": true,
+  "probability": 87.5,
+  "prediction": "max a de fortes chances de gagner à monaco",
+  "driver": "max",
+  "circuit": "monaco"
+}
+```
+
+### `GET /api/v1/model-info`
+Informations sur le modèle chargé
+
+## 📁 Structure du Projet
+
+```
+backend/
+├── app/
+│   ├── main.py                    # Point d'entrée
+│   ├── core/
+│   │   └── config.py             # Configuration
+│   ├── routes/
+│   │   └── prediction_router.py  # Routes API
+│   ├── services/
+│   │   └── ml_service.py         # Service ML
+│   ├── schemas/
+│   │   └── prediction_schema.py  # Pydantic schemas
+│   └── models/
+│       └── f1_winner_model.joblib # Modèle ML
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+└── README.md
+```
+
+## 🧪 Tester l'API
+
+### Avec curl
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/predict" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "Grid": 1,
+    "Rain": 0,
+    "Round": 5,
+    "Season": 2026,
+    "DriverID": "max",
+    "ConstructorName": "Red Bull",
+    "CircuitID": "monaco"
+  }'
+```
+
+### Avec Python
+
+```python
+import requests
+
+url = "http://localhost:8000/api/v1/predict"
+data = {
+    "Grid": 1,
+    "Rain": 0,
+    "Round": 5,
+    "Season": 2026,
+    "DriverID": "max",
+    "ConstructorName": "Red Bull",
+    "CircuitID": "monaco"
+}
+
+response = requests.post(url, json=data)
+print(response.json())
+```
+
+## 🔐 Variables d'Environnement
+
+Créer un fichier `.env` avec :
+
+```env
+APP_NAME=F1 Live AI Commentator
+DEBUG=True
+MODEL_PATH=app/models/f1_winner_model.joblib
+```
+
+## 🐳 Commandes Docker
+
+```bash
+# Construire l'image
+docker-compose build
+
+# Lancer les services
+docker-compose up
+
+# Lancer en arrière-plan
+docker-compose up -d
+
+# Voir les logs
+docker-compose logs -f
+
+# Arrêter les services
+docker-compose down
+
+# Rebuild complet
+docker-compose up --build --force-recreate
+```
+
+## 📊 Modèle ML
+
+Le modèle utilisé doit être placé dans `app/models/f1_winner_model.joblib`
+
+**Features attendues :**
+- Grid (int) : Position de départ
+- Rain (int) : 0=sec, 1=pluie
+- Round (int) : Numéro de la course
+- Season (int) : Année
+- DriverID_code (int) : Code du pilote
+- ConstructorName_code (int) : Code de l'écurie
+- CircuitID_code (int) : Code du circuit
+
+## 🛠️ Développement
+
+### Ajouter une route
+
+1. Créer un nouveau router dans `app/routes/`
+2. L'inclure dans `app/main.py`
+
+### Modifier le modèle
+
+1. Remplacer `app/models/f1_winner_model.joblib`
+2. Adapter `ml_service.py` si nécessaire
+3. Redémarrer l'API
+
+## ❓ Troubleshooting
+
+### Erreur "Model not found"
+```bash
+# Vérifier que le modèle existe
+ls app/models/f1_winner_model.joblib
+
+# Si absent, le copier
+cp ../models/f1_winner_model.joblib app/models/
+```
+
+### Port 8000 déjà utilisé
+```bash
+# Changer le port dans docker-compose.yml
+ports:
+  - "8001:8000"  # Au lieu de 8000:8000
+```
+
+### Rebuild complet
+```bash
+docker-compose down
+docker-compose build --no-cache
+docker-compose up
+```
+
+## 📝 TODO
+
+- [ ] Ajouter l'authentification JWT
+- [ ] Implémenter le rate limiting
+- [ ] Ajouter des tests unitaires
+- [ ] Logger les prédictions dans une base de données
+- [ ] Ajouter le monitoring (Prometheus)
+- [ ] Créer un endpoint pour les prédictions batch
+
+## 🤝 Contribution
+
+1. Fork le projet
+2. Créer une branche (`git checkout -b feature/amelioration`)
+3. Commit (`git commit -m 'Ajout fonctionnalité'`)
+4. Push (`git push origin feature/amelioration`)
+5. Ouvrir une Pull Request
+
+## 📄 Licence
+
+Ce projet fait partie du Fil Rouge Simplon Maghreb - Formation IA 2026
+
+---
+
+**Auteur :** Manal FAROUQI  
+**Projet :** F1 Live AI Commentator  
+**Date :** Février 2026

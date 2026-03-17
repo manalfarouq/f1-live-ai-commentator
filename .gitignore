@@ -40,7 +40,7 @@ venv.bak/
 
 # Jupyter Notebooks
 .ipynb_checkpoints
-*.ipynb
+
 
 # Environment Variables
 .env
@@ -149,4 +149,7 @@ Desktop.ini
 *~
 .fuse_hidden*
 .directory
-.Trash-*
+.Trash-*models/f1_random_forest_tuned.pkl
+models/f1_random_forest_v2.pkl
+
+runs/
