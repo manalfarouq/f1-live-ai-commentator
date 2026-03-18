@@ -6,6 +6,7 @@
 # Le reste du code (prediction_router.py, prediction_schema.py) ne change pas
 # car on retourne toujours "prediction" et "probability"
 
+import pandas as pd
 import joblib
 import numpy as np
 from pathlib import Path
@@ -41,7 +42,7 @@ def prepare_features(data: dict) -> np.ndarray:
     # Grid = position de départ (format ancien) ou grid_position (format nouveau)
     grid_position    = data.get("grid_position", data.get("Grid", 10))
     current_position = data.get("current_position") or grid_position
-    lap_time_ms      = data.get("lap_time_ms", 90000)
+    last_lap_time_ms = data.get("last_lap_time_ms", data.get("lap_time_ms", 90000))  # ✅ corrigé
     avg_lap_time_ms  = data.get("avg_lap_time_ms", 90000)
     best_lap_time_ms = data.get("best_lap_time_ms", 89000)
     lap_time_std     = data.get("lap_time_std", 500)
@@ -52,6 +53,8 @@ def prepare_features(data: dict) -> np.ndarray:
 
     features = {
         # Données de course
+        "year"                    : data.get("Season", data.get("year", 2024)),
+        "round"                   : data.get("Round", data.get("round", 1)),
         "lap"                     : lap,
         "total_laps"              : total_laps,
         "laps_remaining"          : laps_remaining,
@@ -60,24 +63,24 @@ def prepare_features(data: dict) -> np.ndarray:
         "grid_position"           : grid_position,
         "positions_gained"        : grid_position - current_position,
 
-        # Temps au tour
-        "lap_time_ms"             : lap_time_ms,
+        # Temps au tour ✅ last_lap_time_ms à la place de lap_time_ms
+        "last_lap_time_ms"        : last_lap_time_ms,
         "avg_lap_time_ms"         : avg_lap_time_ms,
         "best_lap_time_ms"        : best_lap_time_ms,
         "lap_time_std"            : lap_time_std,
         "gap_to_leader_ms"        : data.get("gap_to_leader_ms", 0),
         "is_fastest_lap"          : data.get("is_fastest_lap", 0),
 
+        # Qualifying
+        "quali_position"          : data.get("quali_position", grid_position),
+        "best_quali_ms"           : data.get("best_quali_ms", 90000),
+        "gap_to_quali_best"       : data.get("gap_to_quali_best", 0),
+
         # Pit stops
         "nb_pit_stops"            : nb_pit_stops,
         "last_pit_lap"            : data.get("last_pit_lap", 0),
         "laps_on_tyre"            : data.get("laps_on_tyre", lap),
         "last_pit_duration_ms"    : data.get("last_pit_duration_ms", 0),
-
-        # Qualifying
-        "quali_position"          : data.get("quali_position", grid_position),
-        "best_quali_ms"           : data.get("best_quali_ms", 90000),
-        "gap_to_quali_best"       : data.get("gap_to_quali_best", 0),
 
         # Championnat
         "driver_season_points"    : data.get("driver_season_points", 0),
@@ -91,13 +94,9 @@ def prepare_features(data: dict) -> np.ndarray:
         "driver_wins_circuit"     : data.get("driver_wins_circuit", 0),
         "constructor_avg_circuit" : data.get("constructor_avg_circuit", 5),
 
-        # Saison / Round (compatibilité avec l'ancien format)
-        "year"                    : data.get("Season", data.get("year", 2024)),
-        "round"                   : data.get("Round", data.get("round", 1)),
-
         # Features calculées (comme dans train_model.py)
-        "lap_time_delta"       : lap_time_ms - avg_lap_time_ms,
-        "pace_vs_best"         : lap_time_ms - best_lap_time_ms,
+        "lap_time_delta"       : last_lap_time_ms - avg_lap_time_ms,
+        "pace_vs_best"         : last_lap_time_ms - best_lap_time_ms,
         "consistency"          : lap_time_std / (avg_lap_time_ms + 1),
         "is_early_race"        : 1 if race_progress_pct < 33 else 0,
         "is_mid_race"          : 1 if 33 <= race_progress_pct < 66 else 0,
@@ -112,7 +111,7 @@ def prepare_features(data: dict) -> np.ndarray:
     }
 
     # Retourner le vecteur dans le bon ordre (ordre du modèle)
-    return np.array([features.get(col, 0) for col in feature_cols]).reshape(1, -1)
+    return pd.DataFrame([features])[feature_cols]
 
 
 def predict(data: dict) -> dict:
