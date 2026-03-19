@@ -2,6 +2,7 @@
 
 import json
 import time
+import math
 from google import genai
 from google.api_core.exceptions import ResourceExhausted
 
@@ -10,8 +11,6 @@ from app.services.rag.retriever import retriever, retriever_chat
 
 client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
-# ── Les 4 personas ───────────────────────────────────────────
-
 PERSONAS = {
     "journaliste": "Tu es un commentateur F1 passionné et dramatique. Tu racontes la course comme une histoire.",
     "professeur" : "Tu es un prof qui explique la F1 simplement. Tu utilises des mots faciles pour les débutants.",
@@ -19,16 +18,25 @@ PERSONAS = {
     "fan"        : "Tu es un fan de F1 très enthousiaste. Tu réagis avec émotion à chaque événement.",
 }
 
-# ── Cache anti-quota ──────────────────────────────────────────
-# On ne génère un vrai commentaire que toutes les INTERVALLE_FRAMES frames
-INTERVALLE_FRAMES = 10
+# ── Quota disponible par service
+QUOTA_PAR_SERVICE = 8   # 8 LLM + 8 RAG = 16 total, marge de sécurité
+
 _cache_rag = {persona: {"compteur": 0, "dernier": "Commentaire en attente..."} for persona in PERSONAS}
+_intervalle_rag = 10
+
+
+def configurer_intervalle(nb_frames: int) -> int:
+    """Calcule automatiquement l'intervalle pour rester sous le quota."""
+    global _intervalle_rag
+    _intervalle_rag = max(10, math.ceil(nb_frames / QUOTA_PAR_SERVICE))
+    for persona in _cache_rag:
+        _cache_rag[persona]["compteur"] = 0  # reset pour chaque nouvelle vidéo
+    print(f"[RAG] {nb_frames} frames → INTERVALLE_FRAMES = {_intervalle_rag} (~{nb_frames // _intervalle_rag} appels Gemini)")
+    return _intervalle_rag
 
 
 def _appeler_gemini(prompt: str, max_retries: int = 3) -> str:
-    """Appelle Gemini avec retry automatique si quota dépassé (429)."""
     delai = 15
-
     for tentative in range(max_retries):
         try:
             response = client.models.generate_content(
@@ -45,7 +53,7 @@ def _appeler_gemini(prompt: str, max_retries: int = 3) -> str:
                 print("❌ RAG quota dépassé — toutes les tentatives échouées")
                 return None
 
-        except (ResourceExhausted, Exception) as e:
+        except Exception as e:
             if tentative < max_retries - 1:
                 print(f"⏳ RAG erreur — attente {delai}s (tentative {tentative + 1}/{max_retries})")
                 time.sleep(delai)
@@ -55,14 +63,13 @@ def _appeler_gemini(prompt: str, max_retries: int = 3) -> str:
 
 
 def generer_commentaire(race_data: dict, persona: str = "journaliste") -> dict:
-    global _cache_rag
+    global _cache_rag, _intervalle_rag
 
     if persona not in _cache_rag:
         _cache_rag[persona] = {"compteur": 0, "dernier": "Commentaire en attente..."}
 
-    # Si on n'est pas sur un multiple de INTERVALLE_FRAMES → retourner le cache
     _cache_rag[persona]["compteur"] += 1
-    if _cache_rag[persona]["compteur"] % INTERVALLE_FRAMES != 0:
+    if _cache_rag[persona]["compteur"] % _intervalle_rag != 0:
         return {
             "commentaire": _cache_rag[persona]["dernier"],
             "persona"    : persona,
@@ -70,7 +77,6 @@ def generer_commentaire(race_data: dict, persona: str = "journaliste") -> dict:
         }
 
     chunks = retriever(race_data)
-
     contexte = ""
     for i, chunk in enumerate(chunks, 1):
         contexte += f"\n[Source {i}]\n{chunk['text']}\n"
@@ -113,7 +119,6 @@ def generer_tous_personas(race_data: dict) -> dict:
 
 
 def repondre_chat(question: str) -> dict:
-
     chunks   = retriever_chat(question)
     contexte = "\n\n".join(chunks)
 

@@ -1,24 +1,35 @@
 # backend/app/services/llm_service.py
 
 import time
+import math
 from google import genai
 from google.api_core.exceptions import ResourceExhausted
 import os
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-# ── Cache anti-quota ──────────────────────────────────────────
-# On ne génère un vrai commentaire que toutes les INTERVALLE_FRAMES frames
-INTERVALLE_FRAMES = 10
-_cache_llm = {"compteur": 0, "dernier": "Commentaire en attente..."}
+# ── Quota disponible par service (LLM partage les 20 req/jour avec RAG)
+QUOTA_PAR_SERVICE = 8   # 8 LLM + 8 RAG = 16 total, marge de sécurité
+
+_cache_llm = {"compteur": 0, "dernier": "Commentaire en attente...", "intervalle": 10}
+
+
+def configurer_intervalle(nb_frames: int) -> int:
+    """Calcule automatiquement l'intervalle pour rester sous le quota."""
+    intervalle = max(10, math.ceil(nb_frames / QUOTA_PAR_SERVICE))
+    _cache_llm["intervalle"] = intervalle
+    _cache_llm["compteur"] = 0  # reset pour chaque nouvelle vidéo
+    print(f"[LLM] {nb_frames} frames → INTERVALLE_FRAMES = {intervalle} (~{nb_frames // intervalle} appels Gemini)")
+    return intervalle
 
 
 def generate_commentary(predictions_list, max_retries: int = 3) -> str:
     global _cache_llm
 
-    # Si on n'est pas sur un multiple de INTERVALLE_FRAMES → retourner le cache
+    intervalle = _cache_llm["intervalle"]
+
     _cache_llm["compteur"] += 1
-    if _cache_llm["compteur"] % INTERVALLE_FRAMES != 0:
+    if _cache_llm["compteur"] % intervalle != 0:
         return _cache_llm["dernier"]
 
     prompt = f"""Tu es un commentateur de Formule 1 passionné. 
