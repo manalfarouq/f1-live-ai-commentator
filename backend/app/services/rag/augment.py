@@ -45,9 +45,13 @@ def _appeler_gemini(prompt: str, max_retries: int = 3) -> str:
                 print("❌ RAG quota dépassé — toutes les tentatives échouées")
                 return None
 
-        except Exception as e:
-            print(f"❌ Erreur Gemini inattendue : {e}")
-            return None
+        except (ResourceExhausted, Exception) as e:
+            if tentative < max_retries - 1:
+                print(f"⏳ RAG erreur — attente {delai}s (tentative {tentative + 1}/{max_retries})")
+                time.sleep(delai)
+            else:
+                print(f"❌ RAG toutes tentatives échouées : {e}")
+                return None
 
 
 def generer_commentaire(race_data: dict, persona: str = "journaliste") -> dict:
