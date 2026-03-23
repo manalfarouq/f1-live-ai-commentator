@@ -42,7 +42,9 @@ def _appeler_gemini(prompt: str, max_retries: int = 3) -> str:
             response = client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=prompt,
+                config={"max_output_tokens": 80},
             )
+
             return response.text.strip()
 
         except ResourceExhausted:
@@ -92,7 +94,7 @@ CONTEXTE F1 :
 INSTRUCTIONS :
 - Écris un commentaire live en français.
 - Utilise les données de course ET le contexte ci-dessus.
-- 3 à 5 phrases maximum.
+- MAXIMUM 2 phrases courtes, style oral.
 - Ne mentionne pas les mots "contexte" ou "source".
 
 COMMENTAIRE :"""

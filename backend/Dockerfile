@@ -10,7 +10,6 @@ RUN apt-get update && apt-get install -y \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
-# installe deno (requis par yt-dlp pour extraire les formats YouTube)
 RUN curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh
 ENV PATH="/usr/local/bin:$PATH"
 
@@ -23,9 +22,12 @@ COPY uv.lock .
 
 RUN uv sync --frozen --no-dev
 
+# Mettre le venv dans le PATH → python = venv python
+ENV PATH="/app/.venv/bin:$PATH"
+
 COPY ./backend/app ./app
 COPY ./models ./models
 
 EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
