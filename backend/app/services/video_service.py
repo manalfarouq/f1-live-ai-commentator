@@ -51,7 +51,7 @@ def analyser_frame(frame: str, lap: int, total_laps: int) -> dict:
 
     # 2. ML prédiction
     race_data = {
-        "lap"             : lap_reel,
+        "lap"             : lap_reel + 1,
         "total_laps"      : total_laps,
         "current_position": drivers[0]["position"] if drivers else 1,
         "drivers"         : drivers,
@@ -83,6 +83,7 @@ def analyser_frame(frame: str, lap: int, total_laps: int) -> dict:
         total_laps=total_laps,
         position_predite=prediction.get("position_predite", 10),
         probability=prediction.get("probability", 50),
+        yolo_events=events,  #? Pour passer les events YOLO au LLM en contexte
     )
 
     # 4. RAG

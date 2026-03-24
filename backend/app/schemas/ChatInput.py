@@ -1,8 +1,7 @@
+# backend/app/schemas/ChatInput.py
 from pydantic import BaseModel
-from typing import Optional
 
 
+# L'objectif est simple — question → réponse
 class ChatInput(BaseModel):
-    """Question libre posée par l'utilisateur dans le chat."""
     question: str
-    contexte_course: Optional[dict] = {}   # état de la course en cours si dispo
