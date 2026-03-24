@@ -8,15 +8,19 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/video': {
-        target: 'http://api:8000',
+        target: 'http://localhost:8001',
         changeOrigin: true,
       },
       '/prediction': {
-        target: 'http://api:8000',
+        target: 'http://localhost:8001',
         changeOrigin: true,
       },
       '/commentary': {
-        target: 'http://api:8000',
+        target: 'http://localhost:8001',
+        changeOrigin: true,
+      },
+      '/chat': {
+        target: 'http://localhost:8001',
         changeOrigin: true,
       },
     },
