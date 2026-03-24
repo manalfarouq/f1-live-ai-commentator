@@ -26,7 +26,7 @@ jobs:
         run: uv sync
 
       - name: Lance les tests
-        run: uv run pytest tests/test_rag.py -v
+        run: uv run pytest backend/tests/test_rag.py -v
         env:
           SECRET_KEY: test_secret_key_longue_32_chars_ok
           ALGORITHM: HS256
