@@ -101,3 +101,10 @@ imageio-ffmpeg
 # Documentation
 mkdocs
 mkdocs-material
+
+
+# Pour la reconnaissance d'objets F1
+opencv-python-headless 
+easyocr 
+torch 
+torchvision
