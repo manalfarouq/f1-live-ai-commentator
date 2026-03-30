@@ -1,4 +1,8 @@
 # backend/app/services/rag/augment.py
+import json
+import math
+from typing import AsyncGenerator
+
 from google import genai
 from app.core.config import settings
 from app.services.rag.retriever import retriever
@@ -13,11 +17,11 @@ PERSONAS = {
 }
 
 
-# ─── Chat RAG (question → PDF → réponse) ──────────────────────────────────────
+# ─── Chat RAG — réponse complète (existant, inchangé) ────────────────────────
 
 def repondre_chat(question: str) -> dict:
     """Flow RAG simple : question → chunks PDF → Gemini → réponse."""
-    chunks = retriever(question)
+    chunks   = retriever(question)
     contexte = "\n\n".join(chunks) if chunks else "Aucun contexte disponible."
 
     prompt = f"""Tu es un expert en Formula 1.
@@ -50,15 +54,72 @@ Réponse :"""
     return {"question": question, "answer": answer}
 
 
-# ─── Commentaire live (race_data → PDF → persona → commentaire) ───────────────
+# ─── Chat RAG — streaming SSE (nouveau) ──────────────────────────────────────
+
+async def repondre_chat_stream(question: str) -> AsyncGenerator[str, None]:
+    """
+    Même RAG que repondre_chat(), mais stream les tokens en SSE.
+
+    Format de sortie (compatible avec le frontend React) :
+        data: {"type":"content_block_delta","delta":{"type":"text_delta","text":"..."}}
+        data: [DONE]
+    """
+    chunks   = retriever(question)
+    contexte = "\n\n".join(chunks) if chunks else "Aucun contexte disponible."
+
+    prompt = f"""Tu es un expert en Formula 1.
+
+Contexte :
+{contexte}
+
+Question : {question}
+
+Instructions :
+- Réponds clairement et simplement
+- Utilise le contexte en priorité
+- Si le contexte n'est pas suffisant, utilise tes connaissances générales
+- Réponse courte (2 à 4 phrases)
+- N'invente pas d'informations
+
+Réponse :"""
+
+    try:
+        # generate_content_stream retourne un itérateur synchrone de chunks
+        stream = client.models.generate_content_stream(
+            model="gemini-2.5-flash",
+            contents=prompt,
+            config={"max_output_tokens": 200},
+        )
+
+        for chunk in stream:
+            # Chaque chunk peut contenir du texte partiel
+            text = getattr(chunk, "text", None)
+            if text:
+                event = {
+                    "type" : "content_block_delta",
+                    "delta": {"type": "text_delta", "text": text},
+                }
+                yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+
+    except Exception as e:
+        print(f"[RAG] Erreur Gemini stream : {e}")
+        # On envoie l'erreur au front comme dernier message
+        event = {
+            "type" : "content_block_delta",
+            "delta": {"type": "text_delta", "text": "Désolé, je ne peux pas répondre pour le moment."},
+        }
+        yield f"data: {json.dumps(event, ensure_ascii=False)}\n\n"
+
+    finally:
+        yield "data: [DONE]\n\n"
+
+
+# ─── Commentaire live (inchangé) ──────────────────────────────────────────────
 
 def generer_commentaire(race_data: dict, persona: str = "journaliste") -> dict:
     """Génère un commentaire de course selon le persona choisi."""
-    import json
-
-    # Construit une requête lisible pour le retriever
     question = f"{race_data.get('event', '')} {race_data.get('flag_type', '')} {race_data.get('tyre_type', '')}"
-    chunks = retriever(question.strip() or "règle F1 course")
+    chunks   = retriever(question.strip() or "règle F1 course")
     contexte = "\n\n".join(chunks) if chunks else "Aucun contexte disponible."
 
     prompt = f"""{PERSONAS.get(persona, PERSONAS['journaliste'])}
@@ -90,14 +151,10 @@ def generer_tous_personas(race_data: dict) -> dict:
     """Génère un commentaire pour chaque persona."""
     return {p: generer_commentaire(race_data, p) for p in PERSONAS}
 
-# ─── Quota / intervalle (utilisé par video_service) ───────────────────────────
+
+# ─── Quota / intervalle (inchangé) ────────────────────────────────────────────
 
 def configurer_intervalle(nb_frames: int) -> int:
-    """
-    Calcule combien de frames attendre entre deux appels RAG.
-    Evite de spammer Gemini sur une vidéo longue.
-    Ex: 40 frames → intervalle de 5 (appel toutes les 5 frames)
-    """
-    import math
+    """Calcule l'intervalle entre deux appels RAG pour éviter de spammer Gemini."""
     QUOTA_PAR_SERVICE = 8
     return max(5, math.ceil(nb_frames / QUOTA_PAR_SERVICE))
